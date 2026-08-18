@@ -8,6 +8,64 @@ const CANDIDATE_MODELS = [
     "gemini-3.5-flash"
 ];
 
+let contextDictionary = [
+    "Nguyễn Thị Diệu Cảnh",
+    "Nguyễn Văn Lợi",
+    "Phạm Trọng Tiến",
+    "Trần Khắc Thọ",
+    "Bùi Cao Nhất",
+    "Nguyễn Thị Thanh Hà",
+    "Huỳnh Công Khương",
+    "Nguyễn Sỹ Tiến",
+    "Nguyễn Văn Tuấn",
+    "Huỳnh Ngọc Tâm",
+    "Khuê",
+    "Mai Lài",
+    "Nguyễn Đình Vinh",
+    "Trần Ngọc Sơn",
+    "Xúc lật",
+    "Thợ máy",
+    "Trạm",
+    "Tây Sơn",
+    "Trà Sơn",
+    "HD",
+    "MC"
+];
+
+// Tải từ điển tự học từ LocalStorage
+function loadCustomDictionary() {
+    const saved = localStorage.getItem('ai_dictionary');
+    if (saved) {
+        document.getElementById('custom-dictionary').value = saved;
+    }
+}
+loadCustomDictionary();
+
+document.getElementById('btn-save-dict').addEventListener('click', () => {
+    const val = document.getElementById('custom-dictionary').value;
+    localStorage.setItem('ai_dictionary', val);
+    showToast('Đã lưu bộ nhớ AI thành công!', 'success');
+});
+
+// Hàm tự động học khi người dùng sửa bảng
+function learnNewWord(word) {
+    if (!word || word.length < 2) return;
+    
+    // Bỏ qua nếu là số, hoặc thời gian
+    if (/^[\dhu\-\.,]+$/.test(word)) return;
+    
+    const textarea = document.getElementById('custom-dictionary');
+    let currentWords = textarea.value.split(',').map(w => w.trim()).filter(w => w);
+    
+    // Nếu từ chưa có trong danh sách
+    if (!currentWords.includes(word) && !contextDictionary.includes(word)) {
+        currentWords.push(word);
+        textarea.value = currentWords.join(', ');
+        localStorage.setItem('ai_dictionary', textarea.value);
+        showToast('AI đã tự động học từ mới: ' + word, 'success');
+    }
+}
+
 // Elements
 const dropZone = document.getElementById('drop-zone');
 const fileInput = document.getElementById('file-input');
@@ -23,7 +81,6 @@ const toastContainer = document.getElementById('toast-container');
 
 let selectedFile = null;
 let currentExtractedData = [];
-let contextDictionary = JSON.parse(localStorage.getItem('timesheetDictionary') || '[]');
 
 // Upload Logic
 dropZone.addEventListener('click', () => fileInput.click());
@@ -88,7 +145,11 @@ function showToast(message, type = 'success') {
 
 // Build Prompt
 function buildPrompt() {
-    const dictString = contextDictionary.join(", ");
+    let dictString = contextDictionary.join(", ");
+    const customDict = localStorage.getItem('ai_dictionary');
+    if (customDict) {
+        dictString += ", " + customDict;
+    }
     return `Bạn là một chuyên gia nhận diện chữ viết tay tiếng Việt. Nhiệm vụ của bạn là trích xuất thông tin Bảng chấm công từ hình ảnh được cung cấp một cách chính xác tuyệt đối.
 
 Cấu trúc bảng trong ảnh thường bao gồm các cột: STT, Họ và tên, Ngày công, Sáng, Trưa, Chiều, Ghi chú.
@@ -304,12 +365,9 @@ function renderTable(data) {
                 if (newVal !== oldVal) {
                     currentExtractedData[index][col] = newVal;
                     
+                    // Nếu sửa Tên hoặc Ghi chú, cho AI học từ này
                     if (col === 'ho_ten' || col === 'ghi_chu') {
-                        if (!contextDictionary.includes(newVal) && newVal.length > 2) {
-                            contextDictionary.push(newVal);
-                            localStorage.setItem('timesheetDictionary', JSON.stringify(contextDictionary));
-                            showToast(`Đã học từ mới: "${newVal}"`, 'success');
-                        }
+                        learnNewWord(newVal);
                     }
                 }
                 
