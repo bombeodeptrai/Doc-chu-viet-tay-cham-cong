@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Timesheet Extractor</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <header>
+            <h1>Timesheet Extractor</h1>
+            <p>Sử dụng AI để trích xuất dữ liệu Bảng chấm công từ hình ảnh.</p>
+        </header>
+
+        <main>
+            <!-- Upload Section -->
+            <section class="upload-section glass-panel" id="upload-section">
+                <div class="drop-zone" id="drop-zone">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="17 8 12 3 7 8"></polyline>
+                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                    </svg>
+                    <p>Kéo thả hình ảnh vào đây hoặc <span>click để chọn file</span></p>
+                    <input type="file" id="file-input" accept="image/*" hidden>
+                </div>
+                
+                <!-- Preview area -->
+                <div class="preview-area hidden" id="preview-area">
+                    <img id="image-preview" src="" alt="Preview">
+                    <div class="actions">
+                        <button id="btn-remove-image" class="btn btn-secondary">Hủy</button>
+                        <button id="btn-extract" class="btn btn-primary">
+                            <span>Bắt đầu trích xuất</span>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Loading Spinner -->
+            <div id="loading-overlay" class="hidden">
+                <div class="spinner"></div>
+                <p>AI đang xử lý dữ liệu...</p>
+            </div>
+
+            <!-- Result Section -->
+            <section class="result-section hidden" id="result-section">
+                <div class="result-header">
+                    <h2>Kết quả trích xuất</h2>
+                    <button id="btn-export" class="btn btn-success">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                        Xuất Excel
+                    </button>
+                </div>
+                
+                <p class="instruction">Click vào ô bất kỳ để chỉnh sửa. Các ô màu vàng là dữ liệu hệ thống không chắc chắn.</p>
+
+                <div class="table-container glass-panel">
+                    <table id="result-table">
+                        <thead>
+                            <tr>
+                                <th>STT</th>
+                                <th>Họ và tên</th>
+                                <th>Ngày công</th>
+                                <th>Ca sáng</th>
+                                <th>Ca trưa</th>
+                                <th>Ca chiều</th>
+                                <th>Ghi chú</th>
+                            </tr>
+                        </thead>
+                        <tbody id="result-tbody">
+                            <!-- Rows will be populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast-container"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>
