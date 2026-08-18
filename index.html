@@ -28,46 +28,16 @@
                 <a href="#">Lịch sử</a>
                 <a href="#">Cài đặt API</a>
                 <div class="avatar">
-                    <img src="https://ui-avatars.com/api/?name=Admin&background=6366f1&color=fff" alt="User Avatar">
-                </div>
-            </div>
-        </div>
-    </nav>
-
-    <div class="dashboard-container">
-        <!-- Sidebar (Optional aesthetic) -->
-        <aside class="sidebar">
-            <div class="menu-group">
-                <h3>CÔNG CỤ</h3>
-                <ul>
-                    <li class="active">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
-                        Trích xuất bảng chấm công
-                    </li>
-                    <li>
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
-                        Trích xuất hoá đơn
-                    </li>
-                    <li>
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                        Lịch sử xử lý
-                    </li>
-                </ul>
-            </div>
-        </aside>
-
+    <div class="layout">
         <!-- Main Content -->
-        <main class="main-content">
-            <div class="page-header">
-                <div>
-                    <h1>Hệ thống Trích xuất Nhân công Kiểu Việt</h1>
-                    <p>Sử dụng trí tuệ nhân tạo Gemini để tự động chuyển đổi ảnh chụp bảng chấm công viết tay thành file Excel chuyên nghiệp.</p>
+        <div class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <div class="logo">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                    <h1>Nhân công Kiểu Việt</h1>
                 </div>
-                <div class="stats-badge">
-                    <span class="status-dot"></span>
-                    Hệ thống AI đang trực tuyến
-                </div>
-            </div>
+            </header>
 
             <!-- Two Column Layout for App -->
             <div class="app-grid">
@@ -81,28 +51,29 @@
                         
                         <div class="drop-zone" id="drop-zone">
                             <div class="drop-icon-bg">
-                                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                                    <polyline points="17 8 12 3 7 8"></polyline>
-                                    <line x1="12" y1="3" x2="12" y2="15"></line>
-                                </svg>
+                                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
                             </div>
-                            <h3>Kéo thả một hoặc nhiều hình ảnh vào đây</h3>
-                            <p>hoặc <span class="highlight">nhấn để chọn file</span> từ máy tính</p>
-                            <p class="file-hint">Hỗ trợ định dạng: JPG, PNG, WEBP</p>
+                            <h3>Kéo thả một hoặc nhiều hình ảnh</h3>
+                            <p>hoặc <span class="highlight">nhấn để chọn file</span></p>
                             <input type="file" id="file-input" accept="image/*" hidden multiple>
                         </div>
                         
                         <div class="preview-area hidden" id="preview-area">
-                            <div class="image-wrapper" id="preview-gallery" style="display: flex; gap: 10px; overflow-x: auto; padding: 10px; max-height: 200px;">
+                            <div class="image-wrapper" id="preview-gallery" style="display: flex; gap: 10px; overflow-x: auto; padding: 5px; margin-bottom: 10px;">
                                 <!-- Thumbnails will be injected here -->
                             </div>
+                            
+                            <!-- Ảnh phóng to của tab hiện tại -->
+                            <div id="active-image-container" style="display: none; margin-bottom: 15px;">
+                                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 5px; font-weight: bold;">Ảnh đang chọn để đối chiếu:</p>
+                                <img id="active-image" style="width: 100%; max-height: 400px; object-fit: contain; border-radius: 8px; border: 1px solid var(--border-color);">
+                            </div>
+
                             <div class="actions">
-                                <button id="btn-remove-image" class="btn btn-outline">
-                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                                <button id="btn-remove-image" class="btn btn-outline" style="padding: 0.5rem; font-size: 0.9rem;">
                                     Xóa tất cả
                                 </button>
-                                <button id="btn-extract" class="btn btn-primary glow-effect">
+                                <button id="btn-extract" class="btn btn-primary glow-effect" style="flex: 2;">
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
                                     Bắt đầu AI Trích xuất
                                 </button>
@@ -111,29 +82,29 @@
                     </div>
 
                     <!-- Dictionary Panel -->
-                    <div class="panel dictionary-panel card" style="margin-top: 1.5rem">
-                        <div class="panel-header" style="margin-bottom: 1rem;">
+                    <div class="panel dictionary-panel card" style="margin-top: 1rem">
+                        <div class="panel-header" style="margin-bottom: 0.5rem;">
                             <h2 style="font-size: 1rem; color: var(--primary);">Từ điển AI Tự học</h2>
                         </div>
-                        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.75rem;">Nhập các từ khó, tên riêng. Hệ thống cũng <strong>tự động lưu</strong> các từ bạn sửa trong bảng kết quả vào đây.</p>
+                        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5rem;">Nhập các từ khó, tên riêng. Hệ thống cũng <strong>tự động lưu</strong> các từ bạn sửa trong bảng kết quả vào đây.</p>
                         <textarea id="custom-dictionary" class="form-control" rows="3" placeholder="Ví dụ: Anh Tuấn, Trạm bê tông, Cẩu 10 tấn..."></textarea>
-                        <button id="btn-save-dict" class="btn btn-outline" style="width: 100%; margin-top: 0.75rem; font-size: 0.85rem;">Cập nhật bộ nhớ</button>
+                        <button id="btn-save-dict" class="btn btn-outline" style="width: 100%; margin-top: 0.5rem; font-size: 0.85rem;">Cập nhật bộ nhớ</button>
                     </div>
                 </div>
 
                 <!-- Right Column: Result -->
                 <div class="panel result-panel card hidden" id="result-section">
-                    <div class="panel-header">
+                    <div class="panel-header" style="padding-bottom: 1rem; border-bottom: 1px solid var(--border-color); margin-bottom: 1rem;">
                         <div style="flex: 1;">
                             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem;">
-                                <h2>Kết quả Dữ liệu</h2>
+                                <h2 style="font-size: 1.25rem;">Kết quả Dữ liệu</h2>
                                 <select id="result-tab-selector" class="form-control" style="width: auto; padding: 0.4rem; font-weight: bold;">
                                     <!-- Tabs injected here -->
                                 </select>
                             </div>
-                            <p class="instruction">Click vào ô bất kỳ để sửa. Ô <span class="warning-text">màu vàng</span> là chữ viết tay quá mờ cần kiểm tra lại.</p>
+                            <p class="instruction" style="font-size: 0.85rem;">Click vào ô bất kỳ để sửa. Ô <span class="warning-text">màu vàng</span> là chữ viết tay mờ cần kiểm tra lại.</p>
                         </div>
-                        <button id="btn-export" class="btn btn-success" style="margin-left: 1rem;">
+                        <button id="btn-export" class="btn btn-success" style="margin-left: 1rem; white-space: nowrap;">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                             Xuất Excel (Nhiều Sheet)
                         </button>

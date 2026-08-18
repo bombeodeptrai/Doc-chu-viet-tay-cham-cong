@@ -323,7 +323,7 @@ btnExtract.addEventListener('click', async () => {
         currentTabIndex = 0;
         tabSelector.value = 0;
         resultSection.classList.remove('hidden');
-        renderTable(extractedDataList[0].data);
+        tabSelector.dispatchEvent(new Event('change'));
         
     } catch (error) {
         showToast('Lỗi: ' + error.message, 'error');
@@ -337,6 +337,18 @@ btnExtract.addEventListener('click', async () => {
 // Tab Switch Logic
 tabSelector.addEventListener('change', (e) => {
     currentTabIndex = parseInt(e.target.value);
+    
+    // Đổi ảnh active
+    if (extractedDataList[currentTabIndex]) {
+        const file = extractedDataList[currentTabIndex].file;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            document.getElementById('active-image').src = e.target.result;
+            document.getElementById('active-image-container').style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+    }
+    
     renderTable(extractedDataList[currentTabIndex].data);
 });
 

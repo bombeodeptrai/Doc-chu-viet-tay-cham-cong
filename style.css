@@ -208,9 +208,16 @@ body {
 /* App Grid */
 .app-grid {
     display: grid;
-    grid-template-columns: 400px 1fr;
-    gap: 2rem;
-    align-items: start;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    padding: 1.5rem;
+    flex: 1;
+}
+
+@media (min-width: 992px) {
+    .app-grid {
+        grid-template-columns: 35% 1fr;
+    }
 }
 
 .card {
@@ -221,7 +228,9 @@ body {
 }
 
 .panel {
-    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
 }
 
 .panel-header {
