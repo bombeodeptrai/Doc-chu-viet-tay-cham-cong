@@ -98,11 +98,12 @@ QUY TẮC CỰC KỲ QUAN TRỌNG KHI ĐỌC DỮ LIỆU:
    - Ký tự viết tay phía sau các con số là chữ "h" (viết tắt của giờ), TUYỆT ĐỐI KHÔNG đọc thành chữ "u".
    - Ví dụ: Trong ảnh nhìn giống "16u30-20u" thì phải xuất ra là "16h30-20h", "6u-7u" thì xuất ra "6h-7h".
 
-2. Quy tắc cột Ghi chú (Biển số xe & Máy móc):
-   - Khi thấy 2, 3 hoặc 4 số cuối viết tay trong cột Ghi chú (ví dụ: "695", "438", "552", "687"), bạn PHẢI tự động dò tìm trong "DANH SÁCH BIỂN SỐ XE" dưới đây và xuất ra kết quả theo định dạng: "[Tên loại xe] [Biển số đầy đủ]".
-   - Ví dụ 1: Thấy ghi "695", dò trong bảng có "77LA0695" thuộc loại "Xe máy đào" -> Xuất ra "Xe máy đào 77LA0695".
-   - Ví dụ 2: Thấy ghi "552", dò bảng thấy "77XA1552" là Xe máy đào -> Xuất ra "Xe máy đào 77XA1552".
-   - Ví dụ 3: Thấy ghi "438", dò bảng thấy "77H02438" là Xe cẩu thùng -> Xuất ra "Xe cẩu thùng 77H02438".
+2. Quy tắc ĐẶC BIỆT DÀNH RIÊNG CHO cột Ghi chú (Biển số xe & Máy móc):
+   - Người lao động thường chỉ viết tắt 2, 3 hoặc 4 số cuối của xe trong cột Ghi chú (ví dụ: "08", "42", "695", "438", "552").
+   - KHI VÀ CHỈ KHI đang trích xuất cột "Ghi chú" và thấy các con số này, bạn PHẢI tự động dò tìm đuôi số đó trong "DANH SÁCH BIỂN SỐ XE" dưới đây và xuất ra kết quả theo định dạng: "[Tên loại xe] [Biển số đầy đủ]".
+   - Ví dụ 1: Ghi chú ghi "42", dò bảng thấy "77LA0742" -> Xuất ra "Xe xúc lật 77LA0742".
+   - Ví dụ 2: Ghi chú ghi "695", dò bảng thấy "77LA0695" -> Xuất ra "Xe máy đào 77LA0695".
+   - TẤT CẢ các con số xuất hiện ở đầu cột Ghi chú đều là ký hiệu xe, hãy dò cẩn thận! Mọi cột khác KHÔNG áp dụng luật này.
    
 --- DANH SÁCH BIỂN SỐ XE ---
 Xe ben lớn: 77H01118, 77H04713, 77H04687, 77H01409, 50E-06208, 50E-86078
