@@ -2,11 +2,9 @@
 const API_KEY = "AQ.Ab8RN6I" + "kJma18I-mLSz" + "CUnqlGVntDv" + "GBn33wsY-hW" + "aT1rQftsg";
 
 const CANDIDATE_MODELS = [
-    "gemini-3-pro-image",
     "gemini-3.1-pro-preview",
-    "gemini-2.5-pro",
-    "gemini-3.1-flash-image",
     "gemini-3.7-flash",
+    "gemini-2.5-pro",
     "gemini-3.5-flash",
     "gemini-2.5-flash"
 ];
@@ -167,7 +165,11 @@ async function callGeminiAPI(modelName, prompt, base64Image, mimeType) {
         throw new Error('Không có kết quả trả về');
     }
 
-    const text = data.candidates[0].content.parts[0].text;
+    let text = data.candidates[0].content.parts[0].text;
+    
+    // Loại bỏ các thẻ markdown (nếu AI lỡ bọc chuỗi JSON trong ```json ... ```)
+    text = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+    
     return JSON.parse(text);
 }
 
