@@ -136,8 +136,8 @@ async function callGeminiAPI(modelName, prompt, base64Image, mimeType) {
             parts: [
                 { text: prompt },
                 {
-                    inline_data: {
-                        mime_type: mimeType,
+                    inlineData: {
+                        mimeType: mimeType,
                         data: base64Image
                     }
                 }
