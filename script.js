@@ -2,11 +2,10 @@
 const API_KEY = "AQ.Ab8RN6I" + "kJma18I-mLSz" + "CUnqlGVntDv" + "GBn33wsY-hW" + "aT1rQftsg";
 
 const CANDIDATE_MODELS = [
-    "gemini-3.1-pro-preview",
+    "gemini-3.6-pro",
+    "gemini-3.6-flash",
     "gemini-3.7-flash",
-    "gemini-2.5-pro",
-    "gemini-3.5-flash",
-    "gemini-2.5-flash"
+    "gemini-3.5-flash"
 ];
 
 // Elements
