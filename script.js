@@ -89,22 +89,47 @@ function showToast(message, type = 'success') {
 // Build Prompt
 function buildPrompt() {
     const dictString = contextDictionary.join(", ");
-    return `Bạn là một chuyên gia nhận diện chữ viết tay tiếng Việt. Nhiệm vụ của bạn là trích xuất thông tin Bảng chấm công từ hình ảnh được cung cấp một cách chính xác tuyệt đối, đặc biệt là cột "Ghi chú" chứa các chữ viết tay nguệch ngoạc.
+    return `Bạn là một chuyên gia nhận diện chữ viết tay tiếng Việt. Nhiệm vụ của bạn là trích xuất thông tin Bảng chấm công từ hình ảnh được cung cấp một cách chính xác tuyệt đối.
 
-Cấu trúc bảng trong ảnh thường bao gồm các cột: STT, Họ và tên, Ngày công (thường ghi X hoặc 0), Tăng ca Sáng, Tăng ca Trưa, Tăng ca Chiều, Ghi chú.
+Cấu trúc bảng trong ảnh thường bao gồm các cột: STT, Họ và tên, Ngày công, Sáng, Trưa, Chiều, Ghi chú.
 
-Vui lòng trả về định dạng mảng JSON (KHÔNG bọc trong block markdown, CHỈ trả về đúng mảng JSON) với các key sau cho mỗi hàng:
+QUY TẮC CỰC KỲ QUAN TRỌNG KHI ĐỌC DỮ LIỆU:
+1. Quy tắc cột Sáng / Trưa / Chiều (Giờ làm việc):
+   - Ký tự viết tay phía sau các con số là chữ "h" (viết tắt của giờ), TUYỆT ĐỐI KHÔNG đọc thành chữ "u".
+   - Ví dụ: Trong ảnh nhìn giống "16u30-20u" thì phải xuất ra là "16h30-20h", "6u-7u" thì xuất ra "6h-7h".
+
+2. Quy tắc cột Ghi chú (Biển số xe & Máy móc):
+   - Khi thấy 2, 3 hoặc 4 số cuối viết tay trong cột Ghi chú (ví dụ: "695", "438", "552", "687"), bạn PHẢI tự động dò tìm trong "DANH SÁCH BIỂN SỐ XE" dưới đây và xuất ra kết quả theo định dạng: "[Tên loại xe] [Biển số đầy đủ]".
+   - Ví dụ 1: Thấy ghi "695", dò trong bảng có "77LA0695" thuộc loại "Xe máy đào" -> Xuất ra "Xe máy đào 77LA0695".
+   - Ví dụ 2: Thấy ghi "552", dò bảng thấy "77XA1552" là Xe máy đào -> Xuất ra "Xe máy đào 77XA1552".
+   - Ví dụ 3: Thấy ghi "438", dò bảng thấy "77H02438" là Xe cẩu thùng -> Xuất ra "Xe cẩu thùng 77H02438".
+   
+--- DANH SÁCH BIỂN SỐ XE ---
+Xe ben lớn: 77H01118, 77H04713, 77H04687, 77H01409, 50E-06208, 50E-86078
+Xe ben nhỏ: 77C20956
+Xe bơm cần: 77H01466
+Xe bơm ngang: 77H02519
+Xe bồn 10m3: 77C23567, 77C23569, 77H00906, 77H01042
+Xe bồn 6m3: 77H02921, 77H03073, 77H03501, 77H03553, 77H03557, 77H03572
+Xe cẩu thùng: 77H02438
+Xe lu: XELU
+Xe máy đào: 77LA0695, 77XA1582, 77XA1552, XE MÁY ĐÀO 0,3 M3
+Xe nâng: XE NÂNG XƯỞNG XẺ, XE NÂNG XƯỞNG VẬT LIỆU XÂY DỰNG
+Xe tải nội thất: 77C02436, 77H08430, 77C11857, 77H10092
+Xe xúc lật: 77LA0694, 77LA0742
+----------------------------
+
+Vui lòng trả về định dạng mảng JSON (KHÔNG bọc trong block markdown) với các key sau cho mỗi hàng:
 - stt (chuỗi hoặc số)
 - ho_ten (chuỗi)
-- ngay_cong (chuỗi)
-- ca_sang (chuỗi, để rỗng nếu không có)
-- ca_trua (chuỗi, để rỗng nếu không có)
-- ca_chieu (chuỗi, để rỗng nếu không có)
-- ghi_chu (chuỗi: ĐỌC THẬT KỸ TỪNG NÉT CHỮ CỦA CỘT NÀY. Ví dụ một số từ thường gặp: "438", "05 Trà Sơn", "05 Trạm", "K2. 552 MC.", "Thợ máy", "Xúc lật")
-- uncertain (boolean): Đặt thành true nếu bạn cảm thấy chữ mờ, nét viết tay quá khó đọc và không chắc chắn, ngược lại false.
+- ngay_cong (chuỗi, thường là "X" hoặc "0")
+- ca_sang (chuỗi, áp dụng quy tắc 1)
+- ca_trua (chuỗi, áp dụng quy tắc 1)
+- ca_chieu (chuỗi, áp dụng quy tắc 1)
+- ghi_chu (chuỗi, áp dụng NGHIÊM NGẶT quy tắc 2. Nếu không thuộc xe nào thì giữ nguyên chữ viết tay)
+- uncertain (boolean): true nếu nét chữ viết tay quá mờ/khó đọc, ngược lại false.
 
-LƯU Ý QUAN TRỌNG:
-Ưu tiên đối chiếu nét chữ khó với danh sách "Từ điển ngữ cảnh" sau đây (đây là các từ khóa/tên/ghi chú đã được người dùng chỉnh sửa và xác nhận ở những lần trước):
+LƯU Ý NGỮ CẢNH BỔ SUNG TỪ NGƯỜI DÙNG:
 [${dictString}]`;
 }
 
