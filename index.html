@@ -87,20 +87,20 @@
                                     <line x1="12" y1="3" x2="12" y2="15"></line>
                                 </svg>
                             </div>
-                            <h3>Kéo thả hình ảnh vào đây</h3>
+                            <h3>Kéo thả một hoặc nhiều hình ảnh vào đây</h3>
                             <p>hoặc <span class="highlight">nhấn để chọn file</span> từ máy tính</p>
                             <p class="file-hint">Hỗ trợ định dạng: JPG, PNG, WEBP</p>
-                            <input type="file" id="file-input" accept="image/*" hidden>
+                            <input type="file" id="file-input" accept="image/*" hidden multiple>
                         </div>
                         
                         <div class="preview-area hidden" id="preview-area">
-                            <div class="image-wrapper">
-                                <img id="image-preview" src="" alt="Preview">
+                            <div class="image-wrapper" id="preview-gallery" style="display: flex; gap: 10px; overflow-x: auto; padding: 10px; max-height: 200px;">
+                                <!-- Thumbnails will be injected here -->
                             </div>
                             <div class="actions">
                                 <button id="btn-remove-image" class="btn btn-outline">
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                                    Xóa ảnh
+                                    Xóa tất cả
                                 </button>
                                 <button id="btn-extract" class="btn btn-primary glow-effect">
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
@@ -124,13 +124,18 @@
                 <!-- Right Column: Result -->
                 <div class="panel result-panel card hidden" id="result-section">
                     <div class="panel-header">
-                        <div>
-                            <h2>Kết quả Dữ liệu</h2>
+                        <div style="flex: 1;">
+                            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem;">
+                                <h2>Kết quả Dữ liệu</h2>
+                                <select id="result-tab-selector" class="form-control" style="width: auto; padding: 0.4rem; font-weight: bold;">
+                                    <!-- Tabs injected here -->
+                                </select>
+                            </div>
                             <p class="instruction">Click vào ô bất kỳ để sửa. Ô <span class="warning-text">màu vàng</span> là chữ viết tay quá mờ cần kiểm tra lại.</p>
                         </div>
-                        <button id="btn-export" class="btn btn-success">
+                        <button id="btn-export" class="btn btn-success" style="margin-left: 1rem;">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                            Xuất Excel
+                            Xuất Excel (Nhiều Sheet)
                         </button>
                     </div>
 

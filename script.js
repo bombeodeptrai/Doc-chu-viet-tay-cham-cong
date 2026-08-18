@@ -1,4 +1,3 @@
-// API Key bị chia nhỏ để tránh bị Google Bot tự động quét và thu hồi (vẫn có rủi ro nếu có bot quét thông minh)
 const API_KEY = "AQ.Ab8RN6I" + "kJma18I-mLSz" + "CUnqlGVntDv" + "GBn33wsY-hW" + "aT1rQftsg";
 
 const CANDIDATE_MODELS = [
@@ -50,14 +49,11 @@ document.getElementById('btn-save-dict').addEventListener('click', () => {
 // Hàm tự động học khi người dùng sửa bảng
 function learnNewWord(word) {
     if (!word || word.length < 2) return;
-    
-    // Bỏ qua nếu là số, hoặc thời gian
     if (/^[\dhu\-\.,]+$/.test(word)) return;
     
     const textarea = document.getElementById('custom-dictionary');
     let currentWords = textarea.value.split(',').map(w => w.trim()).filter(w => w);
     
-    // Nếu từ chưa có trong danh sách
     if (!currentWords.includes(word) && !contextDictionary.includes(word)) {
         currentWords.push(word);
         textarea.value = currentWords.join(', ');
@@ -70,17 +66,19 @@ function learnNewWord(word) {
 const dropZone = document.getElementById('drop-zone');
 const fileInput = document.getElementById('file-input');
 const previewArea = document.getElementById('preview-area');
-const imagePreview = document.getElementById('image-preview');
-const btnRemove = document.getElementById('btn-remove-image');
+const previewGallery = document.getElementById('preview-gallery');
+const btnRemoveImage = document.getElementById('btn-remove-image');
 const btnExtract = document.getElementById('btn-extract');
 const loadingOverlay = document.getElementById('loading-overlay');
 const resultSection = document.getElementById('result-section');
 const resultTbody = document.getElementById('result-tbody');
 const btnExport = document.getElementById('btn-export');
 const toastContainer = document.getElementById('toast-container');
+const tabSelector = document.getElementById('result-tab-selector');
 
-let selectedFile = null;
-let currentExtractedData = [];
+let selectedFiles = [];
+let extractedDataList = [];
+let currentTabIndex = 0;
 
 // Upload Logic
 dropZone.addEventListener('click', () => fileInput.click());
@@ -98,50 +96,55 @@ dropZone.addEventListener('drop', (e) => {
     e.preventDefault();
     dropZone.classList.remove('dragover');
     if (e.dataTransfer.files.length) {
-        handleFile(e.dataTransfer.files[0]);
+        handleFiles(e.dataTransfer.files);
     }
 });
 
 fileInput.addEventListener('change', (e) => {
     if (e.target.files.length) {
-        handleFile(e.target.files[0]);
+        handleFiles(e.target.files);
     }
 });
 
-function handleFile(file) {
-    if (!file.type.startsWith('image/')) {
-        showToast('Vui lòng chỉ chọn file hình ảnh!', 'error');
-        return;
+function handleFiles(files) {
+    let hasImages = false;
+    for (let file of files) {
+        if (!file.type.startsWith('image/')) {
+            showToast(`Bỏ qua ${file.name} vì không phải hình ảnh`, 'warning');
+            continue;
+        }
+        selectedFiles.push(file);
+        hasImages = true;
+        
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const img = document.createElement('img');
+            img.src = e.target.result;
+            img.style.height = '150px';
+            img.style.borderRadius = '0.5rem';
+            img.style.border = '1px solid var(--border-color)';
+            img.title = file.name;
+            previewGallery.appendChild(img);
+        };
+        reader.readAsDataURL(file);
     }
-    selectedFile = file;
-    const reader = new FileReader();
-    reader.onload = (e) => {
-        imagePreview.src = e.target.result;
+    
+    if (hasImages) {
         dropZone.classList.add('hidden');
         previewArea.classList.remove('hidden');
-        resultSection.classList.add('hidden');
-    };
-    reader.readAsDataURL(file);
+    }
 }
 
-btnRemove.addEventListener('click', () => {
-    selectedFile = null;
+btnRemoveImage.addEventListener('click', () => {
+    selectedFiles = [];
+    extractedDataList = [];
     fileInput.value = '';
-    dropZone.classList.remove('hidden');
+    previewGallery.innerHTML = '';
     previewArea.classList.add('hidden');
+    dropZone.classList.remove('hidden');
     resultSection.classList.add('hidden');
+    tabSelector.innerHTML = '';
 });
-
-// Toast Notification
-function showToast(message, type = 'success') {
-    const toast = document.createElement('div');
-    toast.className = `toast ${type}`;
-    toast.textContent = message;
-    toastContainer.appendChild(toast);
-    setTimeout(() => {
-        if(toast.parentElement) toast.remove();
-    }, 5000);
-}
 
 // Build Prompt
 function buildPrompt() {
@@ -204,10 +207,7 @@ function getBase64(file) {
         const reader = new FileReader();
         reader.readAsDataURL(file);
         reader.onload = () => {
-            let encoded = reader.result.toString().replace(/^data:(.*,)?/, '');
-            if ((encoded.length % 4) > 0) {
-                encoded += '='.repeat(4 - (encoded.length % 4));
-            }
+            const encoded = reader.result.toString().split(',')[1];
             resolve(encoded);
         };
         reader.onerror = error => reject(error);
@@ -256,14 +256,12 @@ async function callGeminiAPI(modelName, prompt, base64Image, mimeType) {
 
     let text = data.candidates[0].content.parts[0].text;
     
-    // Khắc phục triệt để lỗi AI trả về chữ giải thích linh tinh trước/sau mảng JSON
     const startIdx = text.indexOf('[');
     const endIdx = text.lastIndexOf(']');
     
     if (startIdx !== -1 && endIdx !== -1 && endIdx > startIdx) {
         text = text.substring(startIdx, endIdx + 1);
     } else {
-        // Nếu không tìm thấy cặp ngoặc vuông, thử xóa markdown như cũ
         text = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
     }
     
@@ -277,72 +275,91 @@ async function callGeminiAPI(modelName, prompt, base64Image, mimeType) {
 
 // Extract Logic
 btnExtract.addEventListener('click', async () => {
-    if (!selectedFile) return;
-
+    if (selectedFiles.length === 0) return;
+    
     loadingOverlay.classList.remove('hidden');
+    extractedDataList = [];
+    tabSelector.innerHTML = '';
     
     try {
-        const base64Image = await getBase64(selectedFile);
-        const mimeType = selectedFile.type;
-        const prompt = buildPrompt();
-        
-        let successData = null;
-        let usedModel = null;
-        let lastError = null;
+        for (let i = 0; i < selectedFiles.length; i++) {
+            const file = selectedFiles[i];
+            document.querySelector('.loading-content h3').textContent = `Đang xử lý ảnh ${i + 1}/${selectedFiles.length}...`;
+            
+            const base64Image = await getBase64(file);
+            const mimeType = file.type;
+            const prompt = buildPrompt();
 
-        // Dynamic Fallback
-        for (const model of CANDIDATE_MODELS) {
-            try {
-                successData = await callGeminiAPI(model, prompt, base64Image, mimeType);
-                usedModel = model;
-                break; // Thoát nếu thành công
-            } catch (err) {
-                console.warn(`Model ${model} thất bại:`, err);
-                lastError = err;
+            let successData = null;
+            let lastError = null;
+
+            for (const model of CANDIDATE_MODELS) {
+                try {
+                    successData = await callGeminiAPI(model, prompt, base64Image, mimeType);
+                    break;
+                } catch (err) {
+                    console.warn(`Model ${model} thất bại cho ảnh ${file.name}:`, err);
+                    lastError = err;
+                }
             }
-        }
 
-        if (!successData) {
-            throw new Error(`Tất cả mô hình đều thất bại. Hãy kiểm tra lại API Key. Lỗi cuối: ${lastError.message}`);
+            if (!successData) {
+                throw new Error(`Ảnh ${file.name} thất bại. Lỗi cuối: ${lastError.message}`);
+            }
+            
+            extractedDataList.push({
+                file: file,
+                data: successData
+            });
+            
+            const option = document.createElement('option');
+            option.value = i;
+            option.textContent = `Tờ số ${i + 1} (${file.name})`;
+            tabSelector.appendChild(option);
         }
-
-        if (usedModel !== CANDIDATE_MODELS[0]) {
-            showToast(`Mô hình chính thất bại, đang dùng dự phòng: ${usedModel}`, 'warning');
-        } else {
-            showToast('Trích xuất thành công bằng bản Pro!', 'success');
-        }
-
-        currentExtractedData = successData;
-        renderTable(currentExtractedData);
+        
+        showToast(`Đã phân tích thành công ${selectedFiles.length} hình ảnh!`, 'success');
+        
+        currentTabIndex = 0;
+        tabSelector.value = 0;
         resultSection.classList.remove('hidden');
+        renderTable(extractedDataList[0].data);
         
     } catch (error) {
         showToast('Lỗi: ' + error.message, 'error');
         console.error(error);
     } finally {
         loadingOverlay.classList.add('hidden');
+        document.querySelector('.loading-content h3').textContent = `Đang phân tích hình ảnh...`;
     }
 });
 
-function renderTable(data) {
+// Tab Switch Logic
+tabSelector.addEventListener('change', (e) => {
+    currentTabIndex = parseInt(e.target.value);
+    renderTable(extractedDataList[currentTabIndex].data);
+});
+
+// Rendering Table
+function renderTable(dataArray) {
     resultTbody.innerHTML = '';
-    data.forEach((row, index) => {
+    if (!dataArray || dataArray.length === 0) {
+        return;
+    }
+
+    dataArray.forEach((row, index) => {
         const tr = document.createElement('tr');
+        const columns = ['stt', 'ho_ten', 'ngay_cong', 'ca_sang', 'ca_trua', 'ca_chieu', 'ghi_chu'];
         
-        const cols = ['stt', 'ho_ten', 'ngay_cong', 'ca_sang', 'ca_trua', 'ca_chieu', 'ghi_chu'];
-        cols.forEach(col => {
+        columns.forEach(col => {
             const td = document.createElement('td');
+            td.contentEditable = true;
             td.textContent = row[col] || '';
-            td.setAttribute('contenteditable', 'true');
-            td.dataset.index = index;
-            td.dataset.col = col;
-            
             if (row.uncertain) {
                 td.classList.add('uncertain-cell');
             }
 
             td.addEventListener('focus', (e) => {
-                // Tự động bôi đen toàn bộ text khi click vào ô để sửa nhanh
                 const range = document.createRange();
                 range.selectNodeContents(e.target);
                 const selection = window.getSelection();
@@ -351,64 +368,82 @@ function renderTable(data) {
             });
 
             td.addEventListener('keydown', (e) => {
-                // Nhấn Enter để kết thúc chỉnh sửa (giống Excel) thay vì xuống dòng
                 if (e.key === 'Enter') {
                     e.preventDefault();
-                    e.target.blur(); // Trigger blur để lưu
+                    e.target.blur();
                 }
             });
 
             td.addEventListener('blur', (e) => {
                 const newVal = e.target.textContent.trim();
-                const oldVal = currentExtractedData[index][col] || '';
-                
+                const oldVal = extractedDataList[currentTabIndex].data[index][col] || '';
                 if (newVal !== oldVal) {
-                    currentExtractedData[index][col] = newVal;
-                    
-                    // Nếu sửa Tên hoặc Ghi chú, cho AI học từ này
+                    extractedDataList[currentTabIndex].data[index][col] = newVal;
                     if (col === 'ho_ten' || col === 'ghi_chu') {
                         learnNewWord(newVal);
                     }
-                }
-                
-                if (row.uncertain) {
-                    td.classList.remove('uncertain-cell');
                 }
             });
 
             tr.appendChild(td);
         });
-        
         resultTbody.appendChild(tr);
     });
 }
 
-// Client-side Excel Export using SheetJS
+// Export Multiple Sheets Logic
 btnExport.addEventListener('click', () => {
-    if (!currentExtractedData.length) {
+    if (extractedDataList.length === 0) {
         showToast('Không có dữ liệu để xuất', 'warning');
         return;
     }
-
+    
     try {
-        const cleanData = currentExtractedData.map(row => ({
-            "STT": row.stt || "",
-            "Họ và tên": row.ho_ten || "",
-            "Ngày công": row.ngay_cong || "",
-            "Ca sáng": row.ca_sang || "",
-            "Ca trưa": row.ca_trua || "",
-            "Ca chiều": row.ca_chieu || "",
-            "Ghi chú": row.ghi_chu || ""
-        }));
-
-        const worksheet = XLSX.utils.json_to_sheet(cleanData);
-        const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, "BangChamCong");
+        const wb = XLSX.utils.book_new();
         
-        XLSX.writeFile(workbook, "timesheet.xlsx");
-        showToast('Đã tải xuống file Excel!', 'success');
-    } catch (error) {
-        showToast('Lỗi xuất Excel: ' + error.message, 'error');
-        console.error(error);
+        extractedDataList.forEach((item, idx) => {
+            const formattedData = item.data.map(row => ({
+                "STT": row.stt || "",
+                "Họ và tên": row.ho_ten || "",
+                "Ngày công": row.ngay_cong || "",
+                "Sáng": row.ca_sang || "",
+                "Trưa": row.ca_trua || "",
+                "Chiều": row.ca_chieu || "",
+                "Ghi chú": row.ghi_chu || ""
+            }));
+            
+            const ws = XLSX.utils.json_to_sheet(formattedData);
+            
+            const wscols = [
+                {wch: 5},
+                {wch: 25},
+                {wch: 10},
+                {wch: 15},
+                {wch: 15},
+                {wch: 15},
+                {wch: 40}
+            ];
+            ws['!cols'] = wscols;
+            
+            let sheetName = `Tờ số ${idx + 1}`;
+            XLSX.utils.book_append_sheet(wb, ws, sheetName);
+        });
+
+        XLSX.writeFile(wb, "Bang_Cham_Cong_AI_Tong_Hop.xlsx");
+        showToast('Đã xuất file Excel thành công!', 'success');
+    } catch (err) {
+        console.error(err);
+        showToast('Lỗi khi xuất Excel', 'error');
     }
 });
+
+// Toast Utility
+function showToast(message, type = 'success') {
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.textContent = message;
+    toastContainer.appendChild(toast);
+    setTimeout(() => {
+        toast.remove();
+    }, 5000);
+}
