@@ -281,52 +281,72 @@ btnExtract.addEventListener('click', async () => {
     extractedDataList = [];
     tabSelector.innerHTML = '';
     
+    let successCount = 0;
+    let failCount = 0;
+
     try {
         for (let i = 0; i < selectedFiles.length; i++) {
             const file = selectedFiles[i];
             document.querySelector('.loading-content h3').textContent = `Đang xử lý ảnh ${i + 1}/${selectedFiles.length}...`;
             
-            const base64Image = await getBase64(file);
-            const mimeType = file.type;
-            const prompt = buildPrompt();
+            try {
+                const base64Image = await getBase64(file);
+                const mimeType = file.type;
+                const prompt = buildPrompt();
 
-            let successData = null;
-            let lastError = null;
+                let successData = null;
+                let lastError = null;
 
-            for (const model of CANDIDATE_MODELS) {
-                try {
-                    successData = await callGeminiAPI(model, prompt, base64Image, mimeType);
-                    break;
-                } catch (err) {
-                    console.warn(`Model ${model} thất bại cho ảnh ${file.name}:`, err);
-                    lastError = err;
+                for (const model of CANDIDATE_MODELS) {
+                    try {
+                        successData = await callGeminiAPI(model, prompt, base64Image, mimeType);
+                        break;
+                    } catch (err) {
+                        console.warn(`Model ${model} thất bại cho ảnh ${file.name}:`, err);
+                        lastError = err;
+                    }
                 }
-            }
 
-            if (!successData) {
-                throw new Error(`Ảnh ${file.name} thất bại. Lỗi cuối: ${lastError.message}`);
+                if (!successData) {
+                    throw new Error(`Lỗi: ${lastError ? lastError.message : 'Không rõ'}`);
+                }
+                
+                extractedDataList.push({
+                    file: file,
+                    data: successData
+                });
+                
+                const option = document.createElement('option');
+                option.value = extractedDataList.length - 1; // Map to array index
+                option.textContent = `Tờ số ${i + 1} (${file.name})`;
+                tabSelector.appendChild(option);
+                
+                successCount++;
+            } catch (imgErr) {
+                console.error(`Ảnh ${file.name} thất bại:`, imgErr);
+                failCount++;
+                showToast(`Bỏ qua Tờ số ${i + 1} do lỗi đọc dữ liệu!`, 'error');
             }
             
-            extractedDataList.push({
-                file: file,
-                data: successData
-            });
-            
-            const option = document.createElement('option');
-            option.value = i;
-            option.textContent = `Tờ số ${i + 1} (${file.name})`;
-            tabSelector.appendChild(option);
+            // Nghỉ 4 giây giữa các ảnh để tránh bị Google chặn API (Rate limit)
+            if (i < selectedFiles.length - 1) {
+                await new Promise(resolve => setTimeout(resolve, 4000));
+            }
         }
         
-        showToast(`Đã phân tích thành công ${selectedFiles.length} hình ảnh!`, 'success');
-        
-        currentTabIndex = 0;
-        tabSelector.value = 0;
-        resultSection.classList.remove('hidden');
-        tabSelector.dispatchEvent(new Event('change'));
+        if (successCount > 0) {
+            showToast(`Đã phân tích xong: Thành công ${successCount}, Thất bại ${failCount}`, successCount === selectedFiles.length ? 'success' : 'warning');
+            currentTabIndex = 0;
+            tabSelector.value = 0;
+            resultSection.classList.remove('hidden');
+            tabSelector.dispatchEvent(new Event('change'));
+        } else {
+            showToast('Tất cả hình ảnh đều xử lý thất bại!', 'error');
+            resultSection.classList.add('hidden');
+        }
         
     } catch (error) {
-        showToast('Lỗi: ' + error.message, 'error');
+        showToast('Lỗi hệ thống: ' + error.message, 'error');
         console.error(error);
     } finally {
         loadingOverlay.classList.add('hidden');
