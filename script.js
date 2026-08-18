@@ -238,6 +238,23 @@ function renderTable(data) {
                 td.classList.add('uncertain-cell');
             }
 
+            td.addEventListener('focus', (e) => {
+                // Tự động bôi đen toàn bộ text khi click vào ô để sửa nhanh
+                const range = document.createRange();
+                range.selectNodeContents(e.target);
+                const selection = window.getSelection();
+                selection.removeAllRanges();
+                selection.addRange(range);
+            });
+
+            td.addEventListener('keydown', (e) => {
+                // Nhấn Enter để kết thúc chỉnh sửa (giống Excel) thay vì xuống dòng
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    e.target.blur(); // Trigger blur để lưu
+                }
+            });
+
             td.addEventListener('blur', (e) => {
                 const newVal = e.target.textContent.trim();
                 const oldVal = currentExtractedData[index][col] || '';
