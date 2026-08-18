@@ -120,7 +120,10 @@ Xe tải nội thất: 77C02436, 77H08430, 77C11857, 77H10092
 Xe xúc lật: 77LA0694, 77LA0742
 ----------------------------
 
-Vui lòng trả về định dạng mảng JSON (KHÔNG bọc trong block markdown) với các key sau cho mỗi hàng:
+YÊU CẦU BẮT BUỘC VỀ ĐỊNH DẠNG ĐẦU RA:
+- TUYỆT ĐỐI KHÔNG giải thích, không chào hỏi, không thêm bất kỳ đoạn text nào bên ngoài JSON.
+- CHỈ trả về DUY NHẤT một mảng JSON, bắt đầu bằng "[" và kết thúc bằng "]".
+- Các key bắt buộc cho mỗi hàng:
 - stt (chuỗi hoặc số)
 - ho_ten (chuỗi)
 - ngay_cong (chuỗi, thường là "X" hoặc "0")
@@ -192,10 +195,23 @@ async function callGeminiAPI(modelName, prompt, base64Image, mimeType) {
 
     let text = data.candidates[0].content.parts[0].text;
     
-    // Loại bỏ các thẻ markdown (nếu AI lỡ bọc chuỗi JSON trong ```json ... ```)
-    text = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+    // Khắc phục triệt để lỗi AI trả về chữ giải thích linh tinh trước/sau mảng JSON
+    const startIdx = text.indexOf('[');
+    const endIdx = text.lastIndexOf(']');
     
-    return JSON.parse(text);
+    if (startIdx !== -1 && endIdx !== -1 && endIdx > startIdx) {
+        text = text.substring(startIdx, endIdx + 1);
+    } else {
+        // Nếu không tìm thấy cặp ngoặc vuông, thử xóa markdown như cũ
+        text = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+    }
+    
+    try {
+        return JSON.parse(text);
+    } catch (e) {
+        console.error("Raw AI Output:", data.candidates[0].content.parts[0].text);
+        throw new Error("AI trả về kết quả không thể đọc được (Lỗi định dạng).");
+    }
 }
 
 // Extract Logic
