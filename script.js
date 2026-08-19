@@ -310,6 +310,7 @@ btnExtract.addEventListener('click', async () => {
                             document.querySelector('.loading-content h3').textContent = `Google quá tải. Đang đếm ngược 60s...`;
                             await new Promise(resolve => setTimeout(resolve, 60000));
                             // Hết 60s vòng lặp attempt sẽ tự quay lại chạy tiếp
+                            attempt--; // Không tính lần này vào số lần thất bại
                         } else {
                             // Lỗi khác (503, 500, lỗi mạng...) chờ 5s rồi thử lại
                             console.warn(`Lỗi lần ${attempt} ở tờ ${i + 1}:`, err.message);
