@@ -295,18 +295,33 @@ btnExtract.addEventListener('click', async () => {
                 let successData = null;
                 let lastError = null;
 
-                for (const model of CANDIDATE_MODELS) {
+                // Thử tối đa 3 lần cho mỗi ảnh nếu gặp lỗi vặt
+                for (let attempt = 1; attempt <= 3; attempt++) {
                     try {
-                        successData = await callGeminiAPI(model, prompt, base64Image, mimeType);
-                        break;
+                        // Chỉ dùng model tốt nhất
+                        successData = await callGeminiAPI(CANDIDATE_MODELS[0], prompt, base64Image, mimeType);
+                        break; // Thành công thì thoát vòng lặp attempt
                     } catch (err) {
-                        console.warn(`Model ${model} thất bại cho ảnh ${file.name}:`, err);
                         lastError = err;
+                        
+                        // Nếu là lỗi Quota / Rate limit (429)
+                        if (err.message.toLowerCase().includes("quota") || err.message.includes("429")) {
+                            showToast(`Google báo quá tải ở Tờ số ${i + 1}. Tự động chờ 60 giây rồi thử lại...`, 'warning');
+                            document.querySelector('.loading-content h3').textContent = `Google quá tải. Đang đếm ngược 60s...`;
+                            await new Promise(resolve => setTimeout(resolve, 60000));
+                            // Hết 60s vòng lặp attempt sẽ tự quay lại chạy tiếp
+                        } else {
+                            // Lỗi khác (503, 500, lỗi mạng...) chờ 5s rồi thử lại
+                            console.warn(`Lỗi lần ${attempt} ở tờ ${i + 1}:`, err.message);
+                            if (attempt < 3) {
+                                await new Promise(resolve => setTimeout(resolve, 5000));
+                            }
+                        }
                     }
                 }
 
                 if (!successData) {
-                    throw new Error(`Lỗi: ${lastError ? lastError.message : 'Không rõ'}`);
+                    throw new Error(lastError ? lastError.message : 'Lỗi không xác định sau 3 lần thử');
                 }
                 
                 extractedDataList.push({
@@ -315,24 +330,18 @@ btnExtract.addEventListener('click', async () => {
                 });
                 
                 const option = document.createElement('option');
-                option.value = extractedDataList.length - 1; // Map to array index
+                option.value = extractedDataList.length - 1;
                 option.textContent = `Tờ số ${i + 1} (${file.name})`;
                 tabSelector.appendChild(option);
                 
                 successCount++;
             } catch (imgErr) {
-                console.error(`Ảnh ${file.name} thất bại:`, imgErr);
+                console.error(`Ảnh ${file.name} thất bại hoàn toàn:`, imgErr);
                 failCount++;
-                showToast(`Tờ số ${i + 1} bị bỏ qua: ${imgErr.message}`, 'error');
-                
-                // Nếu lỗi là do quá giới hạn (Quota / Rate limit), DỪNG TOÀN BỘ ngay lập tức
-                if (imgErr.message.toLowerCase().includes("quota") || imgErr.message.includes("429")) {
-                    showToast('Đã dừng xử lý các ảnh còn lại vì Google báo quá tải. Vui lòng chờ 1 phút.', 'error');
-                    break;
-                }
+                showToast(`Bỏ qua Tờ số ${i + 1} vì lỗi: ${imgErr.message}`, 'error');
             }
             
-            // Nghỉ 4 giây giữa các ảnh để tránh bị Google chặn API (Rate limit)
+            // Nghỉ 4 giây giữa các ảnh để an toàn
             if (i < selectedFiles.length - 1) {
                 await new Promise(resolve => setTimeout(resolve, 4000));
             }
