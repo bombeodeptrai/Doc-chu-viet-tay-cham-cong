@@ -325,7 +325,13 @@ btnExtract.addEventListener('click', async () => {
             } catch (imgErr) {
                 console.error(`Ảnh ${file.name} thất bại:`, imgErr);
                 failCount++;
-                showToast(`Bỏ qua Tờ số ${i + 1} do lỗi đọc dữ liệu!`, 'error');
+                showToast(`Tờ số ${i + 1} bị bỏ qua: ${imgErr.message}`, 'error');
+                
+                // Nếu lỗi là do quá giới hạn (Quota / Rate limit), DỪNG TOÀN BỘ ngay lập tức
+                if (imgErr.message.toLowerCase().includes("quota") || imgErr.message.includes("429")) {
+                    showToast('Đã dừng xử lý các ảnh còn lại vì Google báo quá tải. Vui lòng chờ 1 phút.', 'error');
+                    break;
+                }
             }
             
             // Nghỉ 4 giây giữa các ảnh để tránh bị Google chặn API (Rate limit)
