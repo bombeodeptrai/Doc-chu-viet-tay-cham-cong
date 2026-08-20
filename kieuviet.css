@@ -2,10 +2,10 @@
 
 :root {
     /* Brand Colors - Kieu Viet */
-    --primary: #1B3A5C;
-    --primary-hover: #11263d;
-    --accent: #E8871E;
-    --accent-hover: #cf7618;
+    --primary: #087036; /* Màu xanh lá chuẩn Kiểu Việt */
+    --primary-hover: #06572a;
+    --accent: #E3182D; /* Màu đỏ của logo */
+    --accent-hover: #c41324;
     
     /* UI Colors */
     --bg-color: #F3F4F6;
@@ -21,7 +21,6 @@
     --danger: #EF4444;
     
     /* Layout */
-    --navbar-height: 64px;
     --border-radius: 6px;
     --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
 }
@@ -39,15 +38,29 @@ body {
     line-height: 1.5;
 }
 
+/* Top Bar */
+.top-bar {
+    background-color: var(--primary);
+    color: white;
+    font-size: 0.85rem;
+    padding: 8px 0;
+}
+.top-container {
+    display: flex;
+    justify-content: space-between;
+    padding: 0 2rem;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
 /* Navbar */
 .navbar {
     height: 70px;
     background-color: #ffffff;
-    border-bottom: 1px solid var(--border-color);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
     position: sticky;
     top: 0;
     z-index: 50;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
 }
 
 .nav-container {
@@ -58,34 +71,34 @@ body {
     padding: 0 2rem;
     max-width: 1400px;
     margin: 0 auto;
+    position: relative;
 }
 
-.logo {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-}
-
-.logo-img {
-    height: 45px;
-    width: auto;
-    object-fit: contain;
-    display: block;
-}
-
-.logo-text {
-    font-size: 1.15rem;
-    font-weight: 700;
-    color: var(--primary);
-    border-left: 2px solid var(--border-color);
-    padding-left: 1rem;
-    letter-spacing: 0.5px;
-}
-
-.nav-links {
+.nav-left, .nav-right {
     display: flex;
     align-items: center;
     gap: 2rem;
+    flex: 1;
+}
+
+.nav-right {
+    justify-content: flex-end;
+}
+
+.logo-center {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    top: -30px; /* Thụt lên đè thanh màu xanh */
+    background: white;
+    padding: 10px 20px;
+    border-radius: 0 0 15px 15px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.08);
+}
+
+.logo-center img {
+    height: 80px;
+    display: block;
 }
 
 .nav-link {
@@ -94,10 +107,11 @@ body {
     gap: 0.5rem;
     color: var(--text-main);
     text-decoration: none;
-    font-weight: 500;
+    font-weight: 700;
+    text-transform: uppercase;
     font-size: 0.95rem;
-    padding: 0.5rem 0;
-    border-bottom: 2px solid transparent;
+    padding: 24px 0;
+    border-bottom: 3px solid transparent;
     transition: all 0.2s;
     cursor: pointer;
 }
