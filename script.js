@@ -285,7 +285,7 @@ btnExtract.addEventListener('click', async () => {
     try {
         for (let i = 0; i < selectedFiles.length; i++) {
             const file = selectedFiles[i];
-            document.querySelector('.loading-content h3').textContent = `Đang xử lý ảnh ${i + 1}/${selectedFiles.length}...`;
+            document.querySelector('#loading-overlay h3').textContent = `Đang xử lý ảnh ${i + 1}/${selectedFiles.length}...`;
             
             try {
                 const base64Image = await getBase64(file);
@@ -307,7 +307,7 @@ btnExtract.addEventListener('click', async () => {
                         // Nếu là lỗi Quota / Rate limit (429)
                         if (err.message.toLowerCase().includes("quota") || err.message.includes("429")) {
                             showToast(`Google báo quá tải ở Tờ số ${i + 1}. Tự động chờ 60 giây rồi thử lại...`, 'warning');
-                            document.querySelector('.loading-content h3').textContent = `Google quá tải. Đang đếm ngược 60s...`;
+                            document.querySelector('#loading-overlay h3').textContent = `Google quá tải. Đang đếm ngược 60s...`;
                             await new Promise(resolve => setTimeout(resolve, 60000));
                             // Hết 60s vòng lặp attempt sẽ tự quay lại chạy tiếp
                             attempt--; // Không tính lần này vào số lần thất bại
@@ -365,7 +365,7 @@ btnExtract.addEventListener('click', async () => {
         console.error(error);
     } finally {
         loadingOverlay.classList.add('hidden');
-        document.querySelector('.loading-content h3').textContent = `Đang phân tích hình ảnh...`;
+        document.querySelector('#loading-overlay h3').textContent = `Đang phân tích hình ảnh...`;
     }
 });
 
