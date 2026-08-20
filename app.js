@@ -642,6 +642,16 @@ if (gsUrlInput) {
         if (url) {
             localStorage.setItem('ai_gs_url', url);
             showToast('Đã lưu cấu hình Google Sheets', 'success');
+            
+            // Đổi text button để báo hiệu
+            const originalText = btnSaveGs.textContent;
+            btnSaveGs.textContent = 'Đã lưu ✔️';
+            btnSaveGs.classList.replace('btn-outline', 'btn-success');
+            setTimeout(() => {
+                btnSaveGs.textContent = originalText;
+                btnSaveGs.classList.replace('btn-success', 'btn-outline');
+            }, 2000);
+            
         } else {
             localStorage.removeItem('ai_gs_url');
             showToast('Đã tắt đồng bộ Google Sheets', 'warning');
@@ -664,9 +674,9 @@ async function syncToGoogleSheets(extractedList) {
 
             await fetch(url, {
                 method: 'POST',
-                mode: 'no-cors', // Tránh lỗi CORS trên trình duyệt với GAS
+                // Gửi dưới dạng text/plain để không bị trình duyệt chặn CORS (preflight OPTIONS)
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'text/plain;charset=utf-8'
                 },
                 body: JSON.stringify(payload)
             });
