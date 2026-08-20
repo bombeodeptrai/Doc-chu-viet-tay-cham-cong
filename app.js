@@ -377,6 +377,9 @@ btnExtract.addEventListener('click', async () => {
             
             tabSelector.dispatchEvent(new Event('change'));
             saveToHistory(extractedDataList);
+            
+            // Gọi hàm đồng bộ Google Sheets (nếu có cấu hình)
+            syncToGoogleSheets(extractedDataList);
         } else {
             showToast('Tất cả hình ảnh đều xử lý thất bại!', 'error');
             resultSection.classList.add('hidden');
@@ -622,6 +625,58 @@ document.getElementById('btn-clear-history')?.addEventListener('click', () => {
         showToast('Đã xóa lịch sử', 'success');
     }
 });
+
+// Google Sheets Sync Logic
+const gsUrlInput = document.getElementById('gs-url');
+const btnSaveGs = document.getElementById('btn-save-gs');
+
+// Tải url từ local storage
+if (gsUrlInput) {
+    const savedGsUrl = localStorage.getItem('ai_gs_url');
+    if (savedGsUrl) {
+        gsUrlInput.value = savedGsUrl;
+    }
+
+    btnSaveGs.addEventListener('click', () => {
+        const url = gsUrlInput.value.trim();
+        if (url) {
+            localStorage.setItem('ai_gs_url', url);
+            showToast('Đã lưu cấu hình Google Sheets', 'success');
+        } else {
+            localStorage.removeItem('ai_gs_url');
+            showToast('Đã tắt đồng bộ Google Sheets', 'warning');
+        }
+    });
+}
+
+async function syncToGoogleSheets(extractedList) {
+    const url = localStorage.getItem('ai_gs_url');
+    if (!url) return;
+
+    showToast('Đang đồng bộ dữ liệu lên Google Sheets...', 'info');
+
+    try {
+        for (const item of extractedList) {
+            const payload = {
+                fileName: item.file.name,
+                rows: item.data
+            };
+
+            await fetch(url, {
+                method: 'POST',
+                mode: 'no-cors', // Tránh lỗi CORS trên trình duyệt với GAS
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
+        }
+        showToast('Đã đồng bộ lên Google Sheets thành công!', 'success');
+    } catch (error) {
+        console.error('Lỗi đồng bộ GS:', error);
+        showToast('Lỗi đồng bộ Google Sheets, vui lòng kiểm tra Console', 'error');
+    }
+}
 
 // Toast Utility
 function showToast(message, type = 'success') {
