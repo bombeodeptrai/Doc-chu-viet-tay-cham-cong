@@ -354,6 +354,7 @@ btnExtract.addEventListener('click', async () => {
             tabSelector.value = 0;
             resultSection.classList.remove('hidden');
             tabSelector.dispatchEvent(new Event('change'));
+            saveToHistory(extractedDataList);
         } else {
             showToast('Tất cả hình ảnh đều xử lý thất bại!', 'error');
             resultSection.classList.add('hidden');
@@ -483,6 +484,122 @@ btnExport.addEventListener('click', () => {
     }
 });
 
+// Thêm logic chuyển tab điều hướng
+const navHome = document.getElementById('nav-home');
+const navHistory = document.getElementById('nav-history');
+const appSection = document.getElementById('app-section');
+const historySection = document.getElementById('history-section');
+const historyList = document.getElementById('history-list');
+
+navHome.addEventListener('click', () => {
+    navHome.classList.add('active');
+    navHistory.classList.remove('active');
+    appSection.classList.add('active');
+    historySection.classList.remove('active');
+});
+
+navHistory.addEventListener('click', () => {
+    navHistory.classList.add('active');
+    navHome.classList.remove('active');
+    historySection.classList.add('active');
+    appSection.classList.remove('active');
+    renderHistory();
+});
+
+// Lưu dữ liệu vào lịch sử
+function saveToHistory(extractedDataList) {
+    if (!extractedDataList || extractedDataList.length === 0) return;
+    
+    const history = JSON.parse(localStorage.getItem('ai_attendance_history') || '[]');
+    const newEntry = {
+        id: Date.now(),
+        date: new Date().toLocaleString('vi-VN'),
+        count: extractedDataList.length,
+        // Chỉ lưu dữ liệu text để không vượt quá giới hạn 5MB của localStorage
+        data: extractedDataList.map(item => ({
+            fileName: item.file.name,
+            rows: item.data
+        }))
+    };
+    
+    history.unshift(newEntry);
+    // Lưu tối đa 20 lần gần nhất
+    if (history.length > 20) history.pop();
+    
+    localStorage.setItem('ai_attendance_history', JSON.stringify(history));
+}
+
+// Hiển thị lịch sử
+function renderHistory() {
+    const history = JSON.parse(localStorage.getItem('ai_attendance_history') || '[]');
+    
+    if (history.length === 0) {
+        historyList.innerHTML = '<p style="text-align: center; color: #6b7280; padding: 2rem;">Chưa có dữ liệu lịch sử nào.</p>';
+        return;
+    }
+    
+    historyList.innerHTML = '';
+    history.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'history-item';
+        div.innerHTML = `
+            <div class="history-info">
+                <h4>Đã quét ${item.count} bảng chấm công</h4>
+                <p>Thời gian: ${item.date} — ID: ${item.id}</p>
+            </div>
+            <button class="btn btn-outline btn-view-history" data-id="${item.id}">Xem lại kết quả</button>
+        `;
+        historyList.appendChild(div);
+    });
+    
+    document.querySelectorAll('.btn-view-history').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const id = e.target.getAttribute('data-id');
+            loadHistoryItem(id);
+        });
+    });
+}
+
+function loadHistoryItem(id) {
+    const history = JSON.parse(localStorage.getItem('ai_attendance_history') || '[]');
+    const item = history.find(h => h.id.toString() === id);
+    if (!item) return;
+    
+    // Giả lập lại extractedDataList từ dữ liệu đã lưu
+    extractedDataList = item.data.map(d => ({
+        file: { name: d.fileName }, // dummy file object
+        data: d.rows
+    }));
+    
+    // Render UI
+    tabSelector.innerHTML = '';
+    extractedDataList.forEach((d, idx) => {
+        const option = document.createElement('option');
+        option.value = idx;
+        option.textContent = `Tờ số ${idx + 1} (${d.file.name})`;
+        tabSelector.appendChild(option);
+    });
+    
+    currentTabIndex = 0;
+    tabSelector.value = 0;
+    
+    // Ẩn ảnh active vì không lưu ảnh trong lịch sử
+    document.getElementById('active-image-container').style.display = 'none';
+    
+    resultSection.classList.remove('hidden');
+    navHome.click(); // Quay lại trang chủ
+    tabSelector.dispatchEvent(new Event('change'));
+    showToast('Đã tải lại dữ liệu từ lịch sử', 'success');
+}
+
+document.getElementById('btn-clear-history')?.addEventListener('click', () => {
+    if (confirm('Bạn có chắc muốn xóa toàn bộ lịch sử?')) {
+        localStorage.removeItem('ai_attendance_history');
+        renderHistory();
+        showToast('Đã xóa lịch sử', 'success');
+    }
+});
+
 // Toast Utility
 function showToast(message, type = 'success') {
     const toast = document.createElement('div');
@@ -491,5 +608,6 @@ function showToast(message, type = 'success') {
     toastContainer.appendChild(toast);
     setTimeout(() => {
         toast.remove();
-    }, 5000);
+    }, 4000);
 }
+
