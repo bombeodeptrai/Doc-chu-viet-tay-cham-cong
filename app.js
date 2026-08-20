@@ -130,6 +130,8 @@ function handleFiles(files) {
     if (hasImages) {
         dropZone.classList.add('hidden');
         previewArea.classList.remove('hidden');
+        document.getElementById('stat-files').textContent = selectedFiles.length;
+        document.getElementById('stat-files').nextElementSibling.textContent = 'Đã sẵn sàng trích xuất';
     }
 }
 
@@ -141,7 +143,14 @@ btnRemoveImage.addEventListener('click', () => {
     previewArea.classList.add('hidden');
     dropZone.classList.remove('hidden');
     resultSection.classList.add('hidden');
+    document.getElementById('empty-table-state').style.display = 'block';
+    document.getElementById('result-tab-selector').style.display = 'none';
     tabSelector.innerHTML = '';
+    
+    document.getElementById('stat-files').textContent = '0';
+    document.getElementById('stat-files').nextElementSibling.textContent = 'Chưa có hình ảnh nào';
+    document.getElementById('stat-rows').textContent = '0';
+    document.getElementById('stat-rows').nextElementSibling.textContent = 'Chờ trích xuất';
 });
 
 // Build Prompt
@@ -352,12 +361,26 @@ btnExtract.addEventListener('click', async () => {
             showToast(`Đã phân tích xong: Thành công ${successCount}, Thất bại ${failCount}`, successCount === selectedFiles.length ? 'success' : 'warning');
             currentTabIndex = 0;
             tabSelector.value = 0;
+            tabSelector.style.display = 'block';
+            document.getElementById('empty-table-state').style.display = 'none';
             resultSection.classList.remove('hidden');
+            
+            // Tính tổng số dòng dữ liệu
+            let totalRows = 0;
+            extractedDataList.forEach(item => {
+                if (item.data && Array.isArray(item.data)) {
+                    totalRows += item.data.length;
+                }
+            });
+            document.getElementById('stat-rows').textContent = totalRows;
+            document.getElementById('stat-rows').nextElementSibling.textContent = 'Đã trích xuất thành công';
+            
             tabSelector.dispatchEvent(new Event('change'));
             saveToHistory(extractedDataList);
         } else {
             showToast('Tất cả hình ảnh đều xử lý thất bại!', 'error');
             resultSection.classList.add('hidden');
+            document.getElementById('empty-table-state').style.display = 'block';
         }
         
     } catch (error) {
