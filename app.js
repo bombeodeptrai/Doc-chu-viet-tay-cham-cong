@@ -1,4 +1,14 @@
-const API_KEY = "AQ.Ab8RN6I" + "kJma18I-mLSz" + "CUnqlGVntDv" + "GBn33wsY-hW" + "aT1rQftsg";
+// [BẢO MẬT] Đọc khóa từ LocalStorage cá nhân, tuyệt đối không hardcode trên mã nguồn
+function getGeminiApiKey() {
+    let key = localStorage.getItem('GEMINI_API_KEY') || localStorage.getItem('ai_api_key');
+    if (!key || key.trim().length < 20) {
+        key = prompt('Nhập Gemini API Key cá nhân của bạn (khóa lưu trên trình duyệt của bạn, không gửi đi đâu khác):');
+        if (key && key.trim()) {
+            localStorage.setItem('GEMINI_API_KEY', key.trim());
+        }
+    }
+    return key ? key.trim() : '';
+}
 
 const CANDIDATE_MODELS = [
     "gemini-3.5-flash",
@@ -223,7 +233,11 @@ function getBase64(file) {
 
 // Call Gemini API
 async function callGeminiAPI(modelName, prompt, base64Image, mimeType) {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${API_KEY}`;
+    const apiKey = getGeminiApiKey();
+    if (!apiKey) {
+        throw new Error("Chưa cung cấp Gemini API Key! Vui lòng làm mới trang và nhập API Key.");
+    }
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
     
     const requestBody = {
         contents: [{
@@ -336,7 +350,9 @@ btnExtract.addEventListener('click', async () => {
                 
                 extractedDataList.push({
                     file: file,
-                    data: successData
+                    data: successData,
+                    base64: base64Image,
+                    mimeType: mimeType
                 });
                 
                 const option = document.createElement('option');
@@ -669,6 +685,8 @@ async function syncToGoogleSheets(extractedList) {
         for (const item of extractedList) {
             const payload = {
                 fileName: item.file.name,
+                mimeType: item.mimeType,
+                base64: item.base64,
                 rows: item.data
             };
 
